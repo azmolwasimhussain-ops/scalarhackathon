@@ -1,39 +1,16 @@
-# Use explicit python 3.10 slim image
-FROM python:3.10-slim
+# Read the doc: https://huggingface.co/docs/hub/spaces-sdks-docker
+# you will also find guides on how best to write your Dockerfile
 
-LABEL maintainer="Hackathon Team"
-LABEL description="Customer Support Ticket Routing — OpenEnv environment"
+FROM python:3.9
+
+RUN useradd -m -u 1000 user
+USER user
+ENV PATH="/home/user/.local/bin:$PATH"
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        gcc \
-    && rm -rf /var/lib/apt/lists/*
+COPY --chown=user ./requirements.txt requirements.txt
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
-
-# Core environment files
-COPY env.py        ./env.py
-COPY tasks.py      ./tasks.py
-COPY inference.py  ./inference.py
-COPY openenv.yaml  ./openenv.yaml
-# FIX: added missing web app files
-COPY app.py        ./app.py
-COPY index.html    ./index.html
-COPY style.css     ./style.css
-COPY script.js     ./script.js
-
-ENV API_BASE_URL="https://router.huggingface.co/v1"
-ENV MODEL_NAME="Qwen/Qwen2.5-72B-Instruct"
-ENV HF_TOKEN=""
-ENV TASK_NAME="easy"
-ENV PYTHONUNBUFFERED=1
-
-# FIX: expose port for FastAPI dashboard
-EXPOSE 7860
-
-# Default: run inference directly.
-# For the web dashboard: docker run ... uvicorn app:app --host 0.0.0.0 --port 7860
-CMD ["python", "inference.py"]
+COPY --chown=user . /app
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
