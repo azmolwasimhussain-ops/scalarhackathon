@@ -1,0 +1,116 @@
+# openenv.yaml — Customer Support Ticket Routing Environment
+# Compliant with the OpenEnv specification
+
+name: support-ticket-routing
+version: "1.0.0"
+description: >
+  A reinforcement-learning environment in which an AI agent classifies
+  incoming customer support tickets into the correct routing category.
+  Each episode presents a sequence of tickets; the agent's goal is to
+  maximise cumulative reward by routing tickets accurately.
+
+author: "Hackathon Team"
+license: MIT
+
+# ---------------------------------------------------------------------------
+# Environment metadata
+# ---------------------------------------------------------------------------
+environment:
+  id: support-ticket
+  class: SupportTicketEnv          # Python class in env.py
+  module: env                      # Python module file
+
+# ---------------------------------------------------------------------------
+# Observation space
+# ---------------------------------------------------------------------------
+observation_space:
+  type: text
+  description: >
+    A single customer support ticket provided as a UTF-8 string.
+    Tickets range from a single sentence to several paragraphs.
+  encoding: utf-8
+
+# ---------------------------------------------------------------------------
+# Action space
+# ---------------------------------------------------------------------------
+action_space:
+  type: discrete
+  values:
+    - billing
+    - technical
+    - general
+    - urgent
+  description: >
+    billing   — payment issues, invoices, refunds, charges, subscriptions
+    technical — software bugs, crashes, connectivity, API errors, login problems
+    general   — general questions, product information, policies, how-to queries
+    urgent    — life-safety, security breach, account locked, production outage
+
+# ---------------------------------------------------------------------------
+# Reward schema
+# ---------------------------------------------------------------------------
+reward:
+  type: scalar
+  range: [0.0, 1.0]
+  values:
+    correct:  1.0    # Exact label match
+    partial:  0.5    # Plausible near-miss (e.g., billing ↔ general)
+    wrong:    0.0    # Incorrect category
+
+# ---------------------------------------------------------------------------
+# Tasks
+# ---------------------------------------------------------------------------
+tasks:
+  - name: easy
+    description: >
+      Clear, unambiguous tickets with explicit category keywords.
+      Suitable for baseline evaluation.
+    tickets: 8
+
+  - name: medium
+    description: >
+      Slightly ambiguous tickets where the primary intent is clear on careful
+      reading but surface-level keywords could mislead a naive classifier.
+    tickets: 10
+
+  - name: hard
+    description: >
+      Complex, multi-intent, or emotionally charged tickets.  The agent must
+      identify the single dominant category despite competing signals.
+    tickets: 10
+
+# ---------------------------------------------------------------------------
+# Scoring
+# ---------------------------------------------------------------------------
+scoring:
+  method: normalised_cumulative_reward
+  formula: "max(0, sum(rewards)) / (n_tickets * 1.0)"
+  range: [0.0, 1.0]
+  success_threshold: 0.5
+
+# ---------------------------------------------------------------------------
+# Runtime constraints
+# ---------------------------------------------------------------------------
+runtime:
+  max_cpu_vcores: 2
+  max_memory_gb: 8
+  max_episode_seconds: 1200   # 20 minutes
+
+# ---------------------------------------------------------------------------
+# Inference entry point
+# ---------------------------------------------------------------------------
+inference:
+  entry_point: inference.py
+  env_vars:
+    API_BASE_URL:
+      default: "https://router.huggingface.co/v1"
+      description: Base URL of the OpenAI-compatible LLM endpoint
+    MODEL_NAME:
+      default: "Qwen/Qwen2.5-72B-Instruct"
+      description: Model identifier forwarded to the API
+    HF_TOKEN:
+      required: true
+      description: HuggingFace API token used as bearer authentication
+    TASK_NAME:
+      default: "easy"
+      description: Task difficulty level [easy | medium | hard]
