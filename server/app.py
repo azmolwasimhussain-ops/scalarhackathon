@@ -18,7 +18,14 @@ def health():
 @app.post("/reset")
 def reset(task: str | None = None):
     try:
-        return ticket_env.reset(task_name=task)
+        if task:
+            # Set index based on task name
+            task_names = [t["name"] for t in ticket_env.tasks]
+            if task.lower() in task_names:
+                ticket_env.index = task_names.index(task.lower())
+            else:
+                raise ValueError(f"Unknown task '{task}'. Available: {', '.join(task_names)}")
+        return ticket_env.reset()
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -26,7 +33,14 @@ def reset(task: str | None = None):
 @app.get("/reset")
 def reset_get(task: str | None = None):
     try:
-        return ticket_env.reset(task_name=task)
+        if task:
+            # Set index based on task name
+            task_names = [t["name"] for t in ticket_env.tasks]
+            if task.lower() in task_names:
+                ticket_env.index = task_names.index(task.lower())
+            else:
+                raise ValueError(f"Unknown task '{task}'. Available: {', '.join(task_names)}")
+        return ticket_env.reset()
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
