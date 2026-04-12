@@ -5,46 +5,43 @@ from .tasks import TASKS
 
 class TicketEnv:
     def __init__(self):
-        self.named_tasks = TASKS
-        self.tasks = list(TASKS.values())
+        self.tasks = TASKS
+        self.index = 0
         self.current = None
         self.done = False
-        self._graders = {task_name: True for task_name in TASKS.keys()}
+        self._graders = {task["name"]: True for task in TASKS}
 
     @property
     def graders(self):
         """Return grader status for each task."""
         return self._graders
 
-    def reset(self, task_name: str | None = None):
-        """Start a new one-step episode with a random or named ticket."""
-        if task_name:
-            selected = self.named_tasks.get(task_name.lower())
-            if selected is None:
-                available = ", ".join(sorted(self.named_tasks.keys()))
-                raise ValueError(f"Unknown task '{task_name}'. Available: {available}")
-            self.current = selected
-        else:
-            self.current = random.choice(self.tasks)
+    def reset(self):
+        """Start a new one-step episode with the current task."""
+        self.current = self.tasks[self.index]
         self.done = False
-        return Observation(ticket_text=self.current["text"], history=[])
+        return Observation(ticket_text=self.current["ticket"], history=[])
 
     def step(self, action: Action):
         """Score the submitted category and end the episode."""
         if self.current is None:
             self.reset()
 
-        correct = self.current["label"]
-        prediction = self._normalize_category(action.category)
-        reward = grade(prediction, correct)
+        pred = action.category
+        truth = self.current["label"]
+        reward = grade(pred, truth)
         self.done = True
 
         return (
-            Observation(ticket_text=self.current["text"], history=[]),
+            Observation(ticket_text=self.current["ticket"], history=[]),
             reward,
             self.done,
-            {"correct": correct}
+            {"truth": truth}
         )
+
+    def next_task(self):
+        """Move to the next task."""
+        self.index = (self.index + 1) % len(self.tasks)
 
     def state(self):
         """Return raw state for debugging and API introspection."""

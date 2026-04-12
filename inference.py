@@ -59,34 +59,36 @@ def choose_action(client: OpenAI, ticket_text: str, model_name: str) -> str:
 def main():
     client = build_client()
     env = TicketEnv()
-    task_name = os.getenv("TASK_NAME", "hard").lower()
     model_name = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
-    if task_name not in TASKS:
-        task_name = "hard"
 
-    print(f"[START] task={task_name} env=ticket-routing model={model_name}")
+    # Run all 3 tasks
+    for task in ["easy", "medium", "hard"]:
+        print(f"[START] task={task} env=ticket-routing model={model_name}")
 
-    observation = env.reset(task_name=task_name)
-    done = False
-    step_count = 0
-    rewards = []
+        # Reset to current task
+        env.index = [t["name"] for t in TASKS].index(task)
+        observation = env.reset()
+        done = False
+        step_count = 0
+        rewards = []
 
-    while not done:
-        step_count += 1
-        action_label = choose_action(client, observation.ticket_text, model_name)
-        observation, reward, done, _info = env.step(Action(category=action_label))
-        rewards.append(reward)
+        while not done:
+            step_count += 1
+            action_label = choose_action(client, observation.ticket_text, model_name)
+            observation, reward, done, _info = env.step(Action(category=action_label))
+            rewards.append(reward)
+            print(
+                f"[STEP] step={step_count} action={action_label} "
+                f"reward={reward:.2f} done={str(done).lower()} error=null"
+            )
+
+        score = sum(rewards) / len(rewards)
         print(
-            f"[STEP] step={step_count} action={action_label} "
-            f"reward={reward:.2f} done={str(done).lower()} error=null"
+            f"[END] success=true steps={step_count} score={score:.2f} "
+            f"rewards={','.join([f'{r:.2f}' for r in rewards])}"
         )
-
-    score = sum(rewards) / len(rewards)
-    print(
-        f"[END] success=true steps={step_count} score={score:.2f} "
-        f"rewards={','.join([f'{r:.2f}' for r in rewards])}"
-    )
 
 
 if __name__ == "__main__":
     main()
+
