@@ -19,3 +19,4 @@ tasks:
     grader: true
   - name: hard
     grader: true
+    grader: true

@@ -9,7 +9,12 @@ class TicketEnv:
         self.tasks = list(TASKS.values())
         self.current = None
         self.done = False
-        self.graders = {task_name: True for task_name in TASKS.keys()}
+        self._graders = {task_name: True for task_name in TASKS.keys()}
+
+    @property
+    def graders(self):
+        """Return grader status for each task."""
+        return self._graders
 
     def reset(self, task_name: str | None = None):
         """Start a new one-step episode with a random or named ticket."""
