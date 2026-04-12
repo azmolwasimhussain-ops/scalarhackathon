@@ -83,9 +83,11 @@ def main():
             )
 
         score = sum(rewards) / len(rewards)
+        _EPS = 1e-6
+        score = max(_EPS, min(1.0 - _EPS, score))  # clamp to strictly (0, 1)
         print(
-            f"[END] success=true steps={step_count} score={score:.2f} "
-            f"rewards={','.join([f'{r:.2f}' for r in rewards])}"
+            f"[END] success=true steps={step_count} score={score:.6f} "
+            f"rewards={','.join([f'{r:.6f}' for r in rewards])}"
         )
 
 

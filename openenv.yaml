@@ -10,7 +10,7 @@ observation_space:
 action_space:
   type: object
 
-reward_range: [0.0, 1.0]
+reward_range: [0.000001, 0.999999]
 
 tasks:
   - name: easy
