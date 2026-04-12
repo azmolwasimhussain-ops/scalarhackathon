@@ -13,6 +13,9 @@ action_space:
 reward_range: [0.0, 1.0]
 
 tasks:
-  - easy
-  - medium
-  - hard
+  - name: easy
+    grader: true
+  - name: medium
+    grader: true
+  - name: hard
+    grader: true
