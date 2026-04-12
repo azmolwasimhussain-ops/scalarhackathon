@@ -35,34 +35,35 @@ def normalize_action(raw_text: str) -> str:
 
 
 def model_classifier(client: OpenAI, ticket_text: str) -> str:
+    model_name = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
     prompt = (
         "Classify this support ticket into one label: billing, tech, or general. "
         f"Ticket: {ticket_text}"
     )
     response = client.chat.completions.create(
-        model=MODEL_NAME,
+        model=model_name,
         messages=[{"role": "user", "content": prompt}],
     )
     return normalize_action(response.choices[0].message.content)
 
 
-def choose_action(client: OpenAI, ticket_text: str) -> str:
-    if client and MODEL_NAME:
+def choose_action(client: OpenAI, ticket_text: str, model_name: str) -> str:
+    if client and model_name:
         try:
             return model_classifier(client, ticket_text)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[WARNING] Model API call failed: {e}, falling back to heuristic")
     return heuristic_classifier(ticket_text)
 
 
 def main():
     client = build_client()
     env = TicketEnv()
-    task_name = os.getenv("TASK_NAME", "hard").lower()
+    model_name = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
     if task_name not in TASKS:
         task_name = "hard"
 
-    print(f"[START] task={task_name} env=ticket-routing model={MODEL_NAME}")
+    print(f"[START] task={task_name} env=ticket-routing model={model_name}")
 
     observation = env.reset(task_name=task_name)
     done = False
@@ -71,6 +72,7 @@ def main():
 
     while not done:
         step_count += 1
+        action_label = choose_action(client, observation.ticket_text, model_name
         action_label = choose_action(client, observation.ticket_text)
         observation, reward, done, _info = env.step(Action(category=action_label))
         rewards.append(reward)
