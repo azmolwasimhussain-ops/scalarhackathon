@@ -1,3 +1,13 @@
+---
+title: Scalar Open Env Ticket Routing
+emoji: 📊
+colorFrom: purple
+colorTo: blue
+sdk: docker
+app_file: app.py
+pinned: false
+---
+
 # Ticket Routing OpenEnv
 
 This project provides a small support-ticket classification environment for OpenEnv / Scalar validation.
