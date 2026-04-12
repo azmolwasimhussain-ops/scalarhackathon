@@ -79,7 +79,7 @@ def main():
             rewards.append(reward)
             print(
                 f"[STEP] step={step_count} action={action_label} "
-                f"reward={reward:.2f} done={str(done).lower()} error=null"
+                f"reward={reward:.6f} done={str(done).lower()} error=null"
             )
 
         score = sum(rewards) / len(rewards)
