@@ -59,6 +59,7 @@ def choose_action(client: OpenAI, ticket_text: str, model_name: str) -> str:
 def main():
     client = build_client()
     env = TicketEnv()
+    task_name = os.getenv("TASK_NAME", "hard").lower()
     model_name = os.getenv("MODEL_NAME", "gpt-3.5-turbo")
     if task_name not in TASKS:
         task_name = "hard"
@@ -72,8 +73,7 @@ def main():
 
     while not done:
         step_count += 1
-        action_label = choose_action(client, observation.ticket_text, model_name
-        action_label = choose_action(client, observation.ticket_text)
+        action_label = choose_action(client, observation.ticket_text, model_name)
         observation, reward, done, _info = env.step(Action(category=action_label))
         rewards.append(reward)
         print(
