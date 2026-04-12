@@ -10,6 +10,11 @@ app = FastAPI(title="Ticket Routing Environment API")
 ticket_env = TicketEnv()
 
 
+@app.get("/")
+def health():
+    return {"status": "ok", "message": "Ticket Routing OpenEnv API is running"}
+
+
 @app.post("/reset")
 def reset(task: str | None = None):
     try:
